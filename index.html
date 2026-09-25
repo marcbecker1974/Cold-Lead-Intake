@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cold Lead Intake</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>Cold Lead Intake</h1>
+      <button id="new-lead-btn" class="btn btn-primary" type="button">+ New Lead</button>
+    </header>
+
+    <form id="lead-form" class="lead-form hidden">
+      <div class="field">
+        <label for="company">Company <span class="required">*</span></label>
+        <input type="text" id="company" name="company" required>
+      </div>
+      <div class="field">
+        <label for="website">Website</label>
+        <input type="url" id="website" name="website" placeholder="https://example.com">
+      </div>
+      <div class="field">
+        <label for="segment">Segment</label>
+        <input type="text" id="segment" name="segment">
+      </div>
+      <div class="field">
+        <label for="source">Source</label>
+        <input type="text" id="source" name="source">
+      </div>
+      <div class="field">
+        <label for="research-status">Research Status</label>
+        <select id="research-status" name="researchStatus">
+          <option value="Not Started">Not Started</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Done">Done</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="4"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+      </div>
+    </form>
+
+    <ul id="lead-list" class="lead-list"></ul>
+
+    <p id="empty-state" class="empty-state">No leads yet. Click "+ New Lead" to add one.</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
