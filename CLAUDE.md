@@ -34,3 +34,5 @@ http://localhost:3000
 - Use the Next.js App Router and the `app/` folder for all pages.
 - Do not add new libraries, backend services, external APIs, or major
   features without asking first.
+- For UI and visual design decisions, follow the principles in
+  `docs/github-primer-design.md`.
