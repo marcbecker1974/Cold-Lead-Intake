@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Cold Lead Intake
 
 Cold Lead Intake is a small browser-based B2B sales research app
@@ -32,7 +34,3 @@ http://localhost:3000
 - Use the Next.js App Router and the `app/` folder for all pages.
 - Do not add new libraries, backend services, external APIs, or major
   features without asking first.
-
-## Additional agent instructions
-
-See @AGENTS.md
