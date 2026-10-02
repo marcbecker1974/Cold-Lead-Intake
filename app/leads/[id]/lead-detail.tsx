@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useLeads } from "@/hooks/useLeads";
-import type { LeadDraft } from "@/lib/lead";
+import { formatCreated, type LeadDraft } from "@/lib/lead";
 import { LeadForm } from "../lead-form";
 
 const buttonClass =
@@ -56,11 +56,15 @@ export function LeadDetail({ id }: { id: string }) {
   }
 
   function handleSave(updated: LeadDraft) {
-    // The form doesn't handle leadNumber; keep the existing one.
+    // The form doesn't handle leadNumber or createdAt; keep the existing ones.
     setLeads(
       leads.map((item) =>
         item.id === updated.id
-          ? { ...updated, leadNumber: item.leadNumber }
+          ? {
+              ...updated,
+              leadNumber: item.leadNumber,
+              ...(item.createdAt && { createdAt: item.createdAt }),
+            }
           : item,
       ),
     );
@@ -75,6 +79,8 @@ export function LeadDetail({ id }: { id: string }) {
     setLeads(leads.filter((item) => item.id !== id));
     router.push("/leads");
   }
+
+  const created = formatCreated(lead.createdAt);
 
   // Same fields and order as the form.
   const fields: [string, string | number | undefined][] = [
@@ -112,6 +118,11 @@ export function LeadDetail({ id }: { id: string }) {
             <span className="text-sm tabular-nums text-zinc-600 dark:text-zinc-400">
               Lead #{lead.leadNumber}
             </span>
+            {created && (
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                {created}
+              </span>
+            )}
             <span className="inline-block rounded-full border border-zinc-300 px-2.5 py-0.5 text-xs font-medium dark:border-zinc-700">
               <span className="sr-only">Research status: </span>
               {lead.researchStatus}

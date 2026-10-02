@@ -57,6 +57,7 @@ export type FederalState = (typeof FEDERAL_STATES)[number];
 export type Lead = {
   id: string; // technical UUID, internal; used in the URL
   leadNumber: number; // sequential, human-readable, never reused
+  createdAt?: string; // ISO timestamp; older leads are stamped when first loaded
   companyName: string;
   researchStatus: ResearchStatus;
   website?: string;
@@ -69,5 +70,41 @@ export type Lead = {
   notes?: string;
 };
 
-// A lead before its leadNumber has been assigned.
-export type LeadDraft = Omit<Lead, "leadNumber">;
+// A lead before the app has assigned its leadNumber and createdAt.
+export type LeadDraft = Omit<Lead, "leadNumber" | "createdAt">;
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// Whole calendar days (local time) from createdAt to today, or null if the
+// lead has no valid creation date. Midnight-to-midnight, so a lead created
+// late yesterday is already 1 day old.
+export function daysSinceCreated(
+  createdAt: string | undefined,
+  now: Date = new Date(),
+): number | null {
+  if (!createdAt) return null;
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return null;
+  const startOfDay = (d: Date) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  // Rounding absorbs the 23/25-hour days around daylight saving changes.
+  const days = Math.round((startOfDay(now) - startOfDay(created)) / MS_PER_DAY);
+  return Math.max(0, days);
+}
+
+// The creation date as DD.MM.YY in local time, or null if unknown.
+export function formatCreatedDate(createdAt: string | undefined): string | null {
+  if (!createdAt) return null;
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return null;
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${two(created.getDate())}.${two(created.getMonth() + 1)}.${two(created.getFullYear() % 100)}`;
+}
+
+// "Created 02.10.26 · 3 days ago" (0, 1, 2, ... days), or null if unknown.
+export function formatCreated(createdAt: string | undefined): string | null {
+  const date = formatCreatedDate(createdAt);
+  const days = daysSinceCreated(createdAt);
+  if (date === null || days === null) return null;
+  return `Created ${date} · ${days} ${days === 1 ? "day" : "days"} ago`;
+}

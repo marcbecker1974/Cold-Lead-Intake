@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLeads } from "@/hooks/useLeads";
-import type { Lead, LeadDraft } from "@/lib/lead";
+import { formatCreated, type Lead, type LeadDraft } from "@/lib/lead";
 import { reserveLeadNumber } from "@/lib/storage";
 import { LeadForm } from "./lead-form";
 
@@ -20,10 +20,11 @@ const UNIT_FILTERS = [
 const filterButtonClass =
   "rounded-md border px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
 
-// All saved information except the internal UUID, lowercased for matching.
+// All saved information except the internal UUID and the raw creation
+// timestamp, lowercased for matching.
 function searchText(lead: Lead): string {
   return Object.entries(lead)
-    .filter(([key]) => key !== "id")
+    .filter(([key]) => key !== "id" && key !== "createdAt")
     .map(([key, value]) =>
       key === "leadNumber" ? `#${value} ${value}` : String(value),
     )
@@ -42,7 +43,11 @@ export function LeadList() {
   if (!isLoaded) return null;
 
   function handleSave(draft: LeadDraft) {
-    const lead: Lead = { ...draft, leadNumber: reserveLeadNumber(leads) };
+    const lead: Lead = {
+      ...draft,
+      leadNumber: reserveLeadNumber(leads),
+      createdAt: new Date().toISOString(),
+    };
     setLeads([lead, ...leads]);
     setFormKey((key) => key + 1);
     // Clear the search so the new lead is visible right away.
@@ -142,16 +147,23 @@ export function LeadList() {
                 key={lead.id}
                 className="flex items-center justify-between gap-4 px-4 py-3"
               >
-                <div className="flex min-w-0 items-baseline gap-3">
-                  <span className="shrink-0 text-sm tabular-nums text-zinc-500">
-                    #{lead.leadNumber}
-                  </span>
-                  <Link
-                    href={`/leads/${lead.id}`}
-                    className="min-w-0 break-words text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
-                  >
-                    {lead.companyName}
-                  </Link>
+                <div className="min-w-0">
+                  <div className="flex min-w-0 items-baseline gap-3">
+                    <span className="shrink-0 text-sm tabular-nums text-zinc-500">
+                      #{lead.leadNumber}
+                    </span>
+                    <Link
+                      href={`/leads/${lead.id}`}
+                      className="min-w-0 break-words text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
+                    >
+                      {lead.companyName}
+                    </Link>
+                  </div>
+                  {formatCreated(lead.createdAt) && (
+                    <p className="mt-0.5 text-xs text-zinc-500">
+                      {formatCreated(lead.createdAt)}
+                    </p>
+                  )}
                 </div>
                 <span className="shrink-0 rounded-full border border-zinc-300 px-2.5 py-0.5 text-xs font-medium dark:border-zinc-700">
                   <span className="sr-only">Research status: </span>

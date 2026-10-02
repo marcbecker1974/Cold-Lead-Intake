@@ -57,6 +57,14 @@ URL.
   oldest first (stored order is newest first), and written back. The leads
   key stays `cold-leads:v1`.
 
+## Creation date
+
+New leads store `createdAt` (an ISO timestamp), and the UI shows the date (DD.MM.YY)
+and the age in whole calendar days. Leads saved before this existed had no
+real creation date, so on first load they are stamped once with that day's
+date (when they were first seen) and the value is written back; their age
+counts up from there. Edits keep `createdAt`.
+
 ## When to revisit
 
 Move to IndexedDB or a backend if the app needs large data, attachments,

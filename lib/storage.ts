@@ -16,7 +16,7 @@ const STORAGE_KEY = "cold-leads:v1";
 const COUNTER_KEY = "cold-leads:counter:v1";
 
 // A stored entry whose leadNumber has not been checked or assigned yet.
-type StoredLead = LeadDraft & { leadNumber?: unknown };
+type StoredLead = LeadDraft & { leadNumber?: unknown; createdAt?: string };
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
@@ -55,7 +55,8 @@ function isStoredLead(value: unknown): value is StoredLead {
     isOptional(lead.federalState, (v) => isOneOf(FEDERAL_STATES, v)) &&
     isOptional(lead.ownershipStructure, (v) => isOneOf(OWNERSHIP_STRUCTURES, v)) &&
     isOptional(lead.source, (v) => isOneOf(LEAD_SOURCES, v)) &&
-    isOptional(lead.notes, isString)
+    isOptional(lead.notes, isString) &&
+    isOptional(lead.createdAt, isString)
   );
 }
 
@@ -103,6 +104,21 @@ function assignLeadNumbers(entries: StoredLead[]) {
   return { leads, highest, changed };
 }
 
+// Leads saved before creation dates existed (or with an unreadable one) are
+// stamped once with the current time, i.e. the date they were first seen.
+function stampMissingCreatedAt(leads: Lead[]) {
+  const now = new Date().toISOString();
+  let changed = false;
+  const stamped = leads.map((lead) => {
+    if (lead.createdAt && !Number.isNaN(new Date(lead.createdAt).getTime())) {
+      return lead;
+    }
+    changed = true;
+    return { ...lead, createdAt: now };
+  });
+  return { leads: stamped, changed };
+}
+
 export function loadLeads(): Lead[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -110,10 +126,16 @@ export function loadLeads(): Lead[] {
     const parsed: unknown = JSON.parse(raw);
     // Entries that don't match the Lead model are ignored.
     const entries = Array.isArray(parsed) ? parsed.filter(isStoredLead) : [];
-    const { leads, highest, changed } = assignLeadNumbers(entries);
-    // Persist numbers assigned to older records so they stay stable.
-    if (changed && saveLeads(leads)) writeCounter(highest);
-    return leads;
+    const numbered = assignLeadNumbers(entries);
+    const stamped = stampMissingCreatedAt(numbered.leads);
+    // Persist numbers and dates assigned to older records so they stay stable.
+    if (
+      (numbered.changed || stamped.changed) &&
+      saveLeads(stamped.leads)
+    ) {
+      writeCounter(numbered.highest);
+    }
+    return stamped.leads;
   } catch {
     return [];
   }
