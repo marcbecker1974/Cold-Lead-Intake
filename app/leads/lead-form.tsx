@@ -281,7 +281,7 @@ export function LeadForm({ initialLead, onSave, onCancel }: LeadFormProps) {
           onClick={onCancel}
           className={`${buttonClass} border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900`}
         >
-          Cancel
+          {isEditing ? "Cancel" : "Clear form"}
         </button>
       </div>
     </form>

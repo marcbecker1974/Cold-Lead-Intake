@@ -9,7 +9,8 @@ import { LeadForm } from "./lead-form";
 
 export function LeadList() {
   const { leads, isLoaded, saveFailed, setLeads } = useLeads();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  // Changing the key remounts the form, resetting it to its empty defaults.
+  const [formKey, setFormKey] = useState(0);
 
   // Wait for localStorage to load so the empty state doesn't flash.
   if (!isLoaded) return null;
@@ -17,22 +18,16 @@ export function LeadList() {
   function handleSave(draft: LeadDraft) {
     const lead: Lead = { ...draft, leadNumber: reserveLeadNumber(leads) };
     setLeads([lead, ...leads]);
-    setIsFormOpen(false);
+    setFormKey((key) => key + 1);
   }
 
   return (
     <div className="space-y-4">
-      {isFormOpen ? (
-        <LeadForm onSave={handleSave} onCancel={() => setIsFormOpen(false)} />
-      ) : (
-        <button
-          type="button"
-          onClick={() => setIsFormOpen(true)}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-zinc-700 dark:hover:bg-zinc-900"
-        >
-          Add lead
-        </button>
-      )}
+      <LeadForm
+        key={formKey}
+        onSave={handleSave}
+        onCancel={() => setFormKey((key) => key + 1)}
+      />
 
       {saveFailed && (
         <p role="alert" className="text-sm text-red-700 dark:text-red-400">
