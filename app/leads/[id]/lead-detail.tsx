@@ -10,6 +10,10 @@ import { LeadForm } from "../lead-form";
 const buttonClass =
   "rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
 
+// Read-only counterpart of the form controls in lead-form.tsx.
+const valueBoxClass =
+  "w-full min-w-0 whitespace-pre-wrap break-words rounded-md border border-zinc-300 bg-background px-3 py-1.5 text-sm dark:border-zinc-700";
+
 const backLinkClass =
   "text-sm text-blue-700 hover:underline dark:text-blue-400";
 
@@ -65,7 +69,9 @@ export function LeadDetail({ id }: { id: string }) {
     router.push("/leads");
   }
 
+  // Same fields and order as the form.
   const fields: [string, string | number | undefined][] = [
+    ["Company name", lead.companyName],
     ["Website", lead.website],
     ["Management type", lead.managementType],
     ["Managed units", lead.managedUnits],
@@ -73,6 +79,7 @@ export function LeadDetail({ id }: { id: string }) {
     ["Federal state", lead.federalState],
     ["Ownership structure", lead.ownershipStructure],
     ["Source", lead.source],
+    ["Research status", lead.researchStatus],
     ["Notes", lead.notes],
   ];
 
@@ -101,8 +108,44 @@ export function LeadDetail({ id }: { id: string }) {
             </span>
           </p>
         </div>
-        {!isEditing && (
-          <div className="flex gap-2">
+      </div>
+
+      {isEditing ? (
+        <div className="mt-6">
+          <LeadForm
+            initialLead={lead}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+          />
+        </div>
+      ) : (
+        <section
+          aria-label="Lead details"
+          className="mt-6 rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
+        >
+          <h2 className="text-base font-semibold">Lead details</h2>
+
+          <dl className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            {fields.map(([label, value]) => {
+              const isNotes = label === "Notes";
+              const isEmpty = value === undefined || value === "";
+              return (
+                <div
+                  key={label}
+                  className={`min-w-0${isNotes ? " md:col-span-2" : ""}`}
+                >
+                  <dt className="mb-1 block text-sm font-medium">{label}</dt>
+                  <dd
+                    className={`${valueBoxClass}${isNotes ? " min-h-[4.625rem]" : ""}${isEmpty ? " text-zinc-500" : ""}`}
+                  >
+                    {isEmpty ? "Not specified" : value}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+
+          <div className="mt-4 flex gap-2">
             <button
               type="button"
               ref={editButtonRef}
@@ -119,37 +162,7 @@ export function LeadDetail({ id }: { id: string }) {
               Delete
             </button>
           </div>
-        )}
-      </div>
-
-      {isEditing ? (
-        <div className="mt-6">
-          <LeadForm
-            initialLead={lead}
-            onSave={handleSave}
-            onCancel={() => setIsEditing(false)}
-          />
-        </div>
-      ) : (
-        <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-          {fields.map(([label, value]) => (
-            <div
-              key={label}
-              className={`min-w-0${label === "Notes" ? " md:col-span-2" : ""}`}
-            >
-              <dt className="text-sm text-zinc-600 dark:text-zinc-400">
-                {label}
-              </dt>
-              <dd className="mt-0.5 whitespace-pre-wrap break-words text-base">
-                {value === undefined || value === "" ? (
-                  <span className="text-sm text-zinc-500">Not specified</span>
-                ) : (
-                  value
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        </section>
       )}
     </div>
   );
