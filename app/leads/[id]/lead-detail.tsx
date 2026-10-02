@@ -8,14 +8,14 @@ import { formatCreated, type LeadDraft } from "@/lib/lead";
 import { LeadForm } from "../lead-form";
 
 const buttonClass =
-  "rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
+  "rounded-md border px-3 py-2.5 text-base font-medium md:py-1.5 md:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
 
 // Read-only counterpart of the form controls in lead-form.tsx.
 const valueBoxClass =
-  "w-full min-w-0 whitespace-pre-wrap break-words rounded-md border border-zinc-300 bg-background px-3 py-1.5 text-sm dark:border-zinc-700";
+  "w-full min-w-0 whitespace-pre-wrap break-words rounded-md border border-zinc-300 bg-background px-3 py-2.5 text-base md:py-1.5 md:text-sm dark:border-zinc-700";
 
 const backLinkClass =
-  "text-sm text-blue-700 hover:underline dark:text-blue-400";
+  "-my-3 inline-block py-3 text-sm text-blue-700 hover:underline dark:text-blue-400";
 
 export function LeadDetail({ id }: { id: string }) {
   const router = useRouter();
@@ -157,7 +157,7 @@ export function LeadDetail({ id }: { id: string }) {
                 >
                   <dt className="mb-1 block text-sm font-medium">{label}</dt>
                   <dd
-                    className={`${valueBoxClass}${isNotes ? " min-h-[4.625rem]" : ""}${isEmpty ? " text-zinc-500" : ""}`}
+                    className={`${valueBoxClass}${isNotes ? " min-h-[5.875rem] md:min-h-[4.625rem]" : ""}${isEmpty ? " text-zinc-500" : ""}`}
                   >
                     {isEmpty ? "Not specified" : value}
                   </dd>

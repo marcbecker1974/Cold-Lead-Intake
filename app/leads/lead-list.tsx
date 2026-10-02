@@ -8,7 +8,7 @@ import { reserveLeadNumber } from "@/lib/storage";
 import { LeadForm } from "./lead-form";
 
 const searchClass =
-  "w-full rounded-md border border-zinc-300 bg-zinc-50 px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-600 dark:border-zinc-700 dark:bg-transparent";
+  "w-full rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-base text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-600 md:py-1.5 md:text-sm dark:border-zinc-700 dark:bg-transparent";
 
 // Managed-units filters; min is an exclusive lower bound, null shows all.
 const UNIT_FILTERS = [
@@ -18,7 +18,7 @@ const UNIT_FILTERS = [
 ] as const;
 
 const filterButtonClass =
-  "rounded-md border px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
+  "rounded-md border px-3 py-2.5 text-base font-medium md:py-1 md:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
 
 // All saved information except the internal UUID and the raw creation
 // timestamp, lowercased for matching.
@@ -145,16 +145,16 @@ export function LeadList() {
             {visibleLeads.map((lead) => (
               <li
                 key={lead.id}
-                className="flex items-center justify-between gap-4 px-4 py-3"
+                className="flex flex-col items-start gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
               >
-                <div className="min-w-0">
+                <div className="max-w-full min-w-0">
                   <div className="flex min-w-0 items-baseline gap-3">
                     <span className="shrink-0 text-sm tabular-nums text-zinc-500">
                       #{lead.leadNumber}
                     </span>
                     <Link
                       href={`/leads/${lead.id}`}
-                      className="min-w-0 break-words text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
+                      className="-my-2 min-w-0 py-2 break-words text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
                     >
                       {lead.companyName}
                     </Link>
