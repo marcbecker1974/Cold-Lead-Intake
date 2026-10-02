@@ -135,7 +135,7 @@ export function LeadForm({ initialLead, onSave, onCancel }: LeadFormProps) {
       noValidate
       onSubmit={handleSubmit}
       aria-label={isEditing ? "Edit lead" : "Add lead"}
-      className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
+      className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-transparent"
     >
       <h2 className="text-base font-semibold">
         {isEditing ? "Edit lead" : "Add lead"}
