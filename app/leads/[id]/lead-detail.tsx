@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useLeads } from "@/hooks/useLeads";
-import { formatCreated, type LeadDraft } from "@/lib/lead";
+import { formatCreated, hasBusinessChanges, type LeadDraft } from "@/lib/lead";
 import { LeadForm } from "../lead-form";
 
 const buttonClass =
@@ -56,18 +56,26 @@ export function LeadDetail({ id }: { id: string }) {
   }
 
   function handleSave(updated: LeadDraft) {
-    // The form doesn't handle leadNumber or createdAt; keep the existing ones.
-    setLeads(
-      leads.map((item) =>
-        item.id === updated.id
-          ? {
-              ...updated,
-              leadNumber: item.leadNumber,
-              ...(item.createdAt && { createdAt: item.createdAt }),
-            }
-          : item,
-      ),
-    );
+    // Saving without changing anything keeps the lead exactly as it is, so
+    // updatedAt stays and an exported lead does not become "modified".
+    const current = leads.find((item) => item.id === updated.id);
+    if (current && hasBusinessChanges(current, updated)) {
+      // The form doesn't handle numbers or timestamps: keep leadNumber,
+      // createdAt and exportedAt, and mark the edit with a new updatedAt.
+      setLeads(
+        leads.map((item) =>
+          item.id === updated.id
+            ? {
+                ...updated,
+                leadNumber: item.leadNumber,
+                ...(item.createdAt && { createdAt: item.createdAt }),
+                ...(item.exportedAt && { exportedAt: item.exportedAt }),
+                updatedAt: new Date().toISOString(),
+              }
+            : item,
+        ),
+      );
+    }
     setIsEditing(false);
   }
 

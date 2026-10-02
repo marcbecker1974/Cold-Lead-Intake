@@ -6,6 +6,7 @@ import { useLeads } from "@/hooks/useLeads";
 import { formatCreated, type Lead, type LeadDraft } from "@/lib/lead";
 import { reserveLeadNumber } from "@/lib/storage";
 import { LeadForm } from "./lead-form";
+import { LeadTransfer, type TransferMessage } from "./lead-transfer";
 
 const searchClass =
   "w-full rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2.5 text-base text-ellipsis focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-600 md:py-1.5 md:text-sm dark:border-zinc-700 dark:bg-transparent";
@@ -20,11 +21,13 @@ const UNIT_FILTERS = [
 const filterButtonClass =
   "rounded-md border px-3 py-2.5 text-base font-medium md:py-1 md:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
 
-// All saved information except the internal UUID and the raw creation
-// timestamp, lowercased for matching.
+// All saved information except the internal UUID and the raw timestamps,
+// lowercased for matching.
+const HIDDEN_FROM_SEARCH = ["id", "createdAt", "updatedAt", "exportedAt"];
+
 function searchText(lead: Lead): string {
   return Object.entries(lead)
-    .filter(([key]) => key !== "id" && key !== "createdAt")
+    .filter(([key]) => !HIDDEN_FROM_SEARCH.includes(key))
     .map(([key, value]) =>
       key === "leadNumber" ? `#${value} ${value}` : String(value),
     )
@@ -36,6 +39,7 @@ export function LeadList() {
   const { leads, isLoaded, saveFailed, setLeads } = useLeads();
   const [query, setQuery] = useState("");
   const [minUnits, setMinUnits] = useState<number | null>(null);
+  const [message, setMessage] = useState<TransferMessage | null>(null);
   // Changing the key remounts the form, resetting it to its empty defaults.
   const [formKey, setFormKey] = useState(0);
 
@@ -43,10 +47,12 @@ export function LeadList() {
   if (!isLoaded) return null;
 
   function handleSave(draft: LeadDraft) {
+    const now = new Date().toISOString();
     const lead: Lead = {
       ...draft,
       leadNumber: reserveLeadNumber(leads),
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
     setLeads([lead, ...leads]);
     setFormKey((key) => key + 1);
@@ -81,9 +87,28 @@ export function LeadList() {
 
       <hr className="my-2 border-zinc-200 dark:border-zinc-800" />
 
-      {leads.length > 0 && (
-        <div className="space-y-2">
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold">Saved leads</h2>
+          <LeadTransfer
+            leads={leads}
+            setLeads={setLeads}
+            onMessage={setMessage}
+          />
+        </div>
+        {message && (
+          <p
+            role={message.kind === "error" ? "alert" : "status"}
+            className={
+              message.kind === "error"
+                ? "text-sm text-red-700 dark:text-red-400"
+                : "text-sm text-zinc-600 dark:text-zinc-400"
+            }
+          >
+            {message.text}
+          </p>
+        )}
+        {leads.length > 0 && (
           <input
             type="search"
             aria-label="Search leads"
@@ -92,8 +117,8 @@ export function LeadList() {
             placeholder="Type whatever you search by any saved information"
             className={searchClass}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <section className="space-y-2">
         {leads.length > 0 && (

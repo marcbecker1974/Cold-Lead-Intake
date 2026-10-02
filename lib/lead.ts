@@ -58,6 +58,8 @@ export type Lead = {
   id: string; // technical UUID, internal; used in the URL
   leadNumber: number; // sequential, human-readable, never reused
   createdAt?: string; // ISO timestamp; older leads are stamped when first loaded
+  updatedAt?: string; // ISO timestamp of the last edit; equals createdAt until edited
+  exportedAt?: string; // ISO timestamp of the last export that included this lead
   companyName: string;
   researchStatus: ResearchStatus;
   website?: string;
@@ -70,8 +72,48 @@ export type Lead = {
   notes?: string;
 };
 
-// A lead before the app has assigned its leadNumber and createdAt.
-export type LeadDraft = Omit<Lead, "leadNumber" | "createdAt">;
+// A lead before the app has assigned its number and timestamps.
+export type LeadDraft = Omit<
+  Lead,
+  "leadNumber" | "createdAt" | "updatedAt" | "exportedAt"
+>;
+
+// The fields a user edits in the form. Timestamps, id and leadNumber are not
+// business fields and never count as a change.
+const BUSINESS_FIELDS = [
+  "companyName",
+  "researchStatus",
+  "website",
+  "managementType",
+  "managedUnits",
+  "city",
+  "federalState",
+  "ownershipStructure",
+  "source",
+  "notes",
+] as const satisfies readonly (keyof LeadDraft)[];
+
+// True if any business field differs. An omitted optional field equals an
+// absent one, so clearing a field or filling an empty one is a change.
+export function hasBusinessChanges(existing: LeadDraft, next: LeadDraft): boolean {
+  return BUSINESS_FIELDS.some((key) => existing[key] !== next[key]);
+}
+
+export type ExportStatus =
+  | "not-exported"
+  | "exported"
+  | "modified-since-export";
+
+// Derived, never stored: exportedAt says whether a lead was ever exported,
+// and an updatedAt after it means the lead changed since.
+export function getExportStatus(
+  lead: Pick<Lead, "exportedAt" | "updatedAt">,
+): ExportStatus {
+  if (!lead.exportedAt) return "not-exported";
+  const exported = Date.parse(lead.exportedAt);
+  const updated = lead.updatedAt ? Date.parse(lead.updatedAt) : NaN;
+  return updated > exported ? "modified-since-export" : "exported";
+}
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

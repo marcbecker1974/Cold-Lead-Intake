@@ -16,7 +16,12 @@ const STORAGE_KEY = "cold-leads:v1";
 const COUNTER_KEY = "cold-leads:counter:v1";
 
 // A stored entry whose leadNumber has not been checked or assigned yet.
-type StoredLead = LeadDraft & { leadNumber?: unknown; createdAt?: string };
+export type StoredLead = LeadDraft & {
+  leadNumber?: unknown;
+  createdAt?: string;
+  updatedAt?: string;
+  exportedAt?: string;
+};
 
 function isString(value: unknown): value is string {
   return typeof value === "string";
@@ -26,8 +31,12 @@ function isOneOf(values: readonly string[], value: unknown): boolean {
   return isString(value) && values.includes(value);
 }
 
-function isPositiveInteger(value: unknown): value is number {
+export function isPositiveInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+export function isValidDate(value: unknown): value is string {
+  return isString(value) && !Number.isNaN(new Date(value).getTime());
 }
 
 // An optional field is valid when absent or when it passes its check.
@@ -37,7 +46,7 @@ function isOptional(value: unknown, check: (value: unknown) => boolean) {
 
 // Checks a stored entry against the Lead model and allowed values.
 // leadNumber is handled separately so older records can be migrated.
-function isStoredLead(value: unknown): value is StoredLead {
+export function isStoredLead(value: unknown): value is StoredLead {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
@@ -56,11 +65,13 @@ function isStoredLead(value: unknown): value is StoredLead {
     isOptional(lead.ownershipStructure, (v) => isOneOf(OWNERSHIP_STRUCTURES, v)) &&
     isOptional(lead.source, (v) => isOneOf(LEAD_SOURCES, v)) &&
     isOptional(lead.notes, isString) &&
-    isOptional(lead.createdAt, isString)
+    isOptional(lead.createdAt, isString) &&
+    isOptional(lead.updatedAt, isString) &&
+    isOptional(lead.exportedAt, isString)
   );
 }
 
-function readCounter(): number {
+export function readLeadCounter(): number {
   try {
     const value = Number(window.localStorage.getItem(COUNTER_KEY));
     return isPositiveInteger(value) ? value : 0;
@@ -69,7 +80,7 @@ function readCounter(): number {
   }
 }
 
-function writeCounter(value: number): void {
+export function writeLeadCounter(value: number): void {
   try {
     window.localStorage.setItem(COUNTER_KEY, String(value));
   } catch {
@@ -89,7 +100,7 @@ function assignLeadNumbers(entries: StoredLead[]) {
     return n;
   });
 
-  let highest = Math.max(0, readCounter(), ...used);
+  let highest = Math.max(0, readLeadCounter(), ...used);
   let changed = false;
   for (let i = entries.length - 1; i >= 0; i--) {
     if (numbers[i] === undefined) {
@@ -106,15 +117,26 @@ function assignLeadNumbers(entries: StoredLead[]) {
 
 // Leads saved before creation dates existed (or with an unreadable one) are
 // stamped once with the current time, i.e. the date they were first seen.
-function stampMissingCreatedAt(leads: Lead[]) {
-  const now = new Date().toISOString();
+// A missing updatedAt becomes createdAt, and an unreadable exportedAt is
+// dropped. Returns the leads and whether any were changed.
+export function stampMissingDates(leads: Lead[], now: string) {
   let changed = false;
   const stamped = leads.map((lead) => {
-    if (lead.createdAt && !Number.isNaN(new Date(lead.createdAt).getTime())) {
+    const createdAt = isValidDate(lead.createdAt) ? lead.createdAt : now;
+    const updatedAt = isValidDate(lead.updatedAt) ? lead.updatedAt : createdAt;
+    const hasBadExportedAt =
+      lead.exportedAt !== undefined && !isValidDate(lead.exportedAt);
+    if (
+      createdAt === lead.createdAt &&
+      updatedAt === lead.updatedAt &&
+      !hasBadExportedAt
+    ) {
       return lead;
     }
     changed = true;
-    return { ...lead, createdAt: now };
+    const next: Lead = { ...lead, createdAt, updatedAt };
+    if (hasBadExportedAt) delete next.exportedAt;
+    return next;
   });
   return { leads: stamped, changed };
 }
@@ -127,13 +149,13 @@ export function loadLeads(): Lead[] {
     // Entries that don't match the Lead model are ignored.
     const entries = Array.isArray(parsed) ? parsed.filter(isStoredLead) : [];
     const numbered = assignLeadNumbers(entries);
-    const stamped = stampMissingCreatedAt(numbered.leads);
+    const stamped = stampMissingDates(numbered.leads, new Date().toISOString());
     // Persist numbers and dates assigned to older records so they stay stable.
     if (
       (numbered.changed || stamped.changed) &&
       saveLeads(stamped.leads)
     ) {
-      writeCounter(numbered.highest);
+      writeLeadCounter(numbered.highest);
     }
     return stamped.leads;
   } catch {
@@ -145,8 +167,8 @@ export function loadLeads(): Lead[] {
 // even after the lead holding it is deleted.
 export function reserveLeadNumber(leads: Lead[]): number {
   const next =
-    Math.max(0, readCounter(), ...leads.map((lead) => lead.leadNumber)) + 1;
-  writeCounter(next);
+    Math.max(0, readLeadCounter(), ...leads.map((lead) => lead.leadNumber)) + 1;
+  writeLeadCounter(next);
   return next;
 }
 
