@@ -60,7 +60,8 @@ export function LeadList() {
               >
                 {lead.companyName}
               </Link>
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+              <span className="shrink-0 rounded-full border border-zinc-300 px-2.5 py-0.5 text-xs font-medium dark:border-zinc-700">
+                <span className="sr-only">Research status: </span>
                 {lead.researchStatus}
               </span>
             </li>
