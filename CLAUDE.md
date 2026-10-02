@@ -38,3 +38,10 @@ http://localhost:3000
   `docs/github-primer-design.md`.
 - For data persistence, follow the decision in
   `docs/persistence-decision.md` (browser `localStorage`).
+
+## Git workflow
+
+- Work directly on `main` unless I explicitly ask for a separate branch or
+  pull request.
+- Do not create branches automatically. If you believe a branch is
+  necessary, ask me before creating one.
