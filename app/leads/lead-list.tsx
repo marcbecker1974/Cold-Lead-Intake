@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useLeads } from "@/hooks/useLeads";
 import type { Lead } from "@/lib/lead";
@@ -53,7 +54,12 @@ export function LeadList() {
               key={lead.id}
               className="flex items-center justify-between gap-4 px-4 py-3"
             >
-              <span className="text-base">{lead.companyName}</span>
+              <Link
+                href={`/leads/${lead.id}`}
+                className="text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
+              >
+                {lead.companyName}
+              </Link>
               <span className="text-sm text-zinc-600 dark:text-zinc-400">
                 {lead.researchStatus}
               </span>

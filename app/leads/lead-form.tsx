@@ -16,6 +16,7 @@ import {
 } from "@/lib/lead";
 
 type LeadFormProps = {
+  initialLead?: Lead;
   onSave: (lead: Lead) => void;
   onCancel: () => void;
 };
@@ -63,18 +64,33 @@ function Options({ values }: { values: readonly string[] }) {
   ));
 }
 
-export function LeadForm({ onSave, onCancel }: LeadFormProps) {
+export function LeadForm({ initialLead, onSave, onCancel }: LeadFormProps) {
   const id = useId();
-  const [companyName, setCompanyName] = useState("");
-  const [website, setWebsite] = useState("");
-  const [managementType, setManagementType] = useState("");
-  const [managedUnits, setManagedUnits] = useState("");
-  const [city, setCity] = useState("");
-  const [federalState, setFederalState] = useState("");
-  const [ownershipStructure, setOwnershipStructure] = useState("");
-  const [source, setSource] = useState("");
-  const [researchStatus, setResearchStatus] = useState<ResearchStatus>("New");
-  const [notes, setNotes] = useState("");
+  const isEditing = initialLead !== undefined;
+  const [companyName, setCompanyName] = useState(
+    initialLead?.companyName ?? "",
+  );
+  const [website, setWebsite] = useState(initialLead?.website ?? "");
+  const [managementType, setManagementType] = useState(
+    initialLead?.managementType ?? "",
+  );
+  const [managedUnits, setManagedUnits] = useState(
+    initialLead?.managedUnits === undefined
+      ? ""
+      : String(initialLead.managedUnits),
+  );
+  const [city, setCity] = useState(initialLead?.city ?? "");
+  const [federalState, setFederalState] = useState(
+    initialLead?.federalState ?? "",
+  );
+  const [ownershipStructure, setOwnershipStructure] = useState(
+    initialLead?.ownershipStructure ?? "",
+  );
+  const [source, setSource] = useState(initialLead?.source ?? "");
+  const [researchStatus, setResearchStatus] = useState<ResearchStatus>(
+    initialLead?.researchStatus ?? "New",
+  );
+  const [notes, setNotes] = useState(initialLead?.notes ?? "");
   const [nameError, setNameError] = useState("");
   const [unitsError, setUnitsError] = useState("");
 
@@ -95,7 +111,7 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
 
     // Empty optional fields are omitted rather than stored as "".
     const lead: Lead = {
-      id: crypto.randomUUID(),
+      id: initialLead?.id ?? crypto.randomUUID(),
       companyName: name,
       researchStatus,
     };
@@ -117,10 +133,12 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
     <form
       noValidate
       onSubmit={handleSubmit}
-      aria-label="Add lead"
+      aria-label={isEditing ? "Edit lead" : "Add lead"}
       className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
     >
-      <h2 className="text-base font-semibold">Add lead</h2>
+      <h2 className="text-base font-semibold">
+        {isEditing ? "Edit lead" : "Add lead"}
+      </h2>
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field
@@ -132,6 +150,7 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
           <input
             id={`${id}-name`}
             type="text"
+            autoFocus={isEditing}
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             aria-invalid={nameError ? true : undefined}
@@ -254,7 +273,7 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
           type="submit"
           className={`${buttonClass} bg-emerald-700 text-white hover:bg-emerald-800`}
         >
-          Save lead
+          {isEditing ? "Save changes" : "Save lead"}
         </button>
         <button
           type="button"
