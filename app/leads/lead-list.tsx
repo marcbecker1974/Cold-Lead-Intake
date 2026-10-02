@@ -7,8 +7,23 @@ import type { Lead, LeadDraft } from "@/lib/lead";
 import { reserveLeadNumber } from "@/lib/storage";
 import { LeadForm } from "./lead-form";
 
+const searchClass =
+  "w-full rounded-md border border-zinc-300 bg-background px-3 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-600 dark:border-zinc-700";
+
+// All saved information except the internal UUID, lowercased for matching.
+function searchText(lead: Lead): string {
+  return Object.entries(lead)
+    .filter(([key]) => key !== "id")
+    .map(([key, value]) =>
+      key === "leadNumber" ? `#${value} ${value}` : String(value),
+    )
+    .join(" ")
+    .toLowerCase();
+}
+
 export function LeadList() {
   const { leads, isLoaded, saveFailed, setLeads } = useLeads();
+  const [query, setQuery] = useState("");
   // Changing the key remounts the form, resetting it to its empty defaults.
   const [formKey, setFormKey] = useState(0);
 
@@ -19,7 +34,16 @@ export function LeadList() {
     const lead: Lead = { ...draft, leadNumber: reserveLeadNumber(leads) };
     setLeads([lead, ...leads]);
     setFormKey((key) => key + 1);
+    // Clear the search so the new lead is visible right away.
+    setQuery("");
   }
+
+  // Every search term must appear somewhere in the lead's saved information.
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const visibleLeads = leads.filter((lead) => {
+    const text = searchText(lead);
+    return terms.every((term) => text.includes(term));
+  });
 
   return (
     <div className="space-y-4">
@@ -36,6 +60,22 @@ export function LeadList() {
         </p>
       )}
 
+      {leads.length > 0 && (
+        <div>
+          <label htmlFor="lead-search" className="mb-1 block text-sm font-medium">
+            Search leads
+          </label>
+          <input
+            id="lead-search"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by any saved information"
+            className={searchClass}
+          />
+        </div>
+      )}
+
       {leads.length === 0 ? (
         <div className="rounded-md border border-zinc-200 px-4 py-4 dark:border-zinc-800">
           <p className="text-sm font-semibold">No target companies yet</p>
@@ -44,9 +84,16 @@ export function LeadList() {
             qualification.
           </p>
         </div>
+      ) : visibleLeads.length === 0 ? (
+        <div className="rounded-md border border-zinc-200 px-4 py-4 dark:border-zinc-800">
+          <p className="text-sm font-semibold">No leads match your search</p>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            Try a different term, or clear the search field.
+          </p>
+        </div>
       ) : (
         <ul className="divide-y divide-zinc-200 rounded-md border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-          {leads.map((lead) => (
+          {visibleLeads.map((lead) => (
             <li
               key={lead.id}
               className="flex items-center justify-between gap-4 px-4 py-3"
