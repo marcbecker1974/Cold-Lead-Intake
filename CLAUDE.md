@@ -36,3 +36,5 @@ http://localhost:3000
   features without asking first.
 - For UI and visual design decisions, follow the principles in
   `docs/github-primer-design.md`.
+- For data persistence, follow the decision in
+  `docs/persistence-decision.md` (browser `localStorage`).
