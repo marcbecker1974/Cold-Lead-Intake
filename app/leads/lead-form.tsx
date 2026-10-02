@@ -9,6 +9,7 @@ import {
   RESEARCH_STATUSES,
   type FederalState,
   type Lead,
+  type LeadDraft,
   type LeadSource,
   type ManagementType,
   type OwnershipStructure,
@@ -17,7 +18,7 @@ import {
 
 type LeadFormProps = {
   initialLead?: Lead;
-  onSave: (lead: Lead) => void;
+  onSave: (lead: LeadDraft) => void;
   onCancel: () => void;
 };
 
@@ -110,7 +111,7 @@ export function LeadForm({ initialLead, onSave, onCancel }: LeadFormProps) {
     if (nextNameError || nextUnitsError) return;
 
     // Empty optional fields are omitted rather than stored as "".
-    const lead: Lead = {
+    const lead: LeadDraft = {
       id: initialLead?.id ?? crypto.randomUUID(),
       companyName: name,
       researchStatus,

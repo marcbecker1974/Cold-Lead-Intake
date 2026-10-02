@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useLeads } from "@/hooks/useLeads";
-import type { Lead } from "@/lib/lead";
+import type { Lead, LeadDraft } from "@/lib/lead";
+import { reserveLeadNumber } from "@/lib/storage";
 import { LeadForm } from "./lead-form";
 
 export function LeadList() {
@@ -13,7 +14,8 @@ export function LeadList() {
   // Wait for localStorage to load so the empty state doesn't flash.
   if (!isLoaded) return null;
 
-  function handleSave(lead: Lead) {
+  function handleSave(draft: LeadDraft) {
+    const lead: Lead = { ...draft, leadNumber: reserveLeadNumber(leads) };
     setLeads([lead, ...leads]);
     setIsFormOpen(false);
   }
@@ -54,12 +56,17 @@ export function LeadList() {
               key={lead.id}
               className="flex items-center justify-between gap-4 px-4 py-3"
             >
-              <Link
-                href={`/leads/${lead.id}`}
-                className="text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
-              >
-                {lead.companyName}
-              </Link>
+              <div className="flex min-w-0 items-baseline gap-3">
+                <span className="shrink-0 text-sm tabular-nums text-zinc-500">
+                  #{lead.leadNumber}
+                </span>
+                <Link
+                  href={`/leads/${lead.id}`}
+                  className="min-w-0 break-words text-base font-medium text-blue-700 hover:underline dark:text-blue-400"
+                >
+                  {lead.companyName}
+                </Link>
+              </div>
               <span className="shrink-0 rounded-full border border-zinc-300 px-2.5 py-0.5 text-xs font-medium dark:border-zinc-700">
                 <span className="sr-only">Research status: </span>
                 {lead.researchStatus}

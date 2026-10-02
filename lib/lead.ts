@@ -55,7 +55,8 @@ export const FEDERAL_STATES = [
 export type FederalState = (typeof FEDERAL_STATES)[number];
 
 export type Lead = {
-  id: string;
+  id: string; // technical UUID, internal; used in the URL
+  leadNumber: number; // sequential, human-readable, never reused
   companyName: string;
   researchStatus: ResearchStatus;
   website?: string;
@@ -67,3 +68,6 @@ export type Lead = {
   source?: LeadSource;
   notes?: string;
 };
+
+// A lead before its leadNumber has been assigned.
+export type LeadDraft = Omit<Lead, "leadNumber">;

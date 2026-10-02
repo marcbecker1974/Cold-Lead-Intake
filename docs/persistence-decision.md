@@ -44,6 +44,19 @@ Use browser `localStorage` to persist cold leads.
 - Version the storage key, for example `cold-leads:v1`.
 - Handle write errors such as quota exceeded.
 
+## Lead numbers
+
+Each lead has a sequential, human-readable `leadNumber` (shown as `#12`) in
+addition to its technical UUID `id`, which stays internal and is used in the
+URL.
+
+- The highest number ever assigned is stored under `cold-leads:counter:v1`,
+  so a number is never reused after its lead is deleted. If the counter is
+  missing, the next number is derived from the existing leads.
+- Records stored without a valid or unique `leadNumber` are numbered on load,
+  oldest first (stored order is newest first), and written back. The leads
+  key stays `cold-leads:v1`.
+
 ## When to revisit
 
 Move to IndexedDB or a backend if the app needs large data, attachments,

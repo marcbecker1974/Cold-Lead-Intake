@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useLeads } from "@/hooks/useLeads";
-import type { Lead } from "@/lib/lead";
+import type { LeadDraft } from "@/lib/lead";
 import { LeadForm } from "../lead-form";
 
 const buttonClass =
@@ -55,8 +55,15 @@ export function LeadDetail({ id }: { id: string }) {
     );
   }
 
-  function handleSave(updated: Lead) {
-    setLeads(leads.map((item) => (item.id === updated.id ? updated : item)));
+  function handleSave(updated: LeadDraft) {
+    // The form doesn't handle leadNumber; keep the existing one.
+    setLeads(
+      leads.map((item) =>
+        item.id === updated.id
+          ? { ...updated, leadNumber: item.leadNumber }
+          : item,
+      ),
+    );
     setIsEditing(false);
   }
 
@@ -101,7 +108,10 @@ export function LeadDetail({ id }: { id: string }) {
           <h1 className="break-words text-2xl font-semibold tracking-tight">
             {lead.companyName}
           </h1>
-          <p className="mt-2">
+          <p className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-sm tabular-nums text-zinc-600 dark:text-zinc-400">
+              Lead #{lead.leadNumber}
+            </span>
             <span className="inline-block rounded-full border border-zinc-300 px-2.5 py-0.5 text-xs font-medium dark:border-zinc-700">
               <span className="sr-only">Research status: </span>
               {lead.researchStatus}
