@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { loadLeads, saveLeads, type Lead } from "@/lib/storage";
+import type { Lead } from "@/lib/lead";
+import { loadLeads, saveLeads } from "@/lib/storage";
 
 export function useLeads() {
   const [leads, setLeads] = useState<Lead[]>([]);
